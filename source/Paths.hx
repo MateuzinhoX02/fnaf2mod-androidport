@@ -137,7 +137,7 @@ class Paths
 	{
 		#if MODS_ALLOWED
 		var file:String = modsVideo(key);
-		if(FileSystem.exists(file)) {
+		if(Assets.exists(file)) {
 			return file;
 		}
 		#end
@@ -148,7 +148,7 @@ class Paths
 	{
 		#if MODS_ALLOWED
 		var file:String = modsSounds(key);
-		if(FileSystem.exists(file)) {
+		if(Assets.exists(file)) {
 			if(!customSoundsLoaded.exists(file)) {
 				customSoundsLoaded.set(file, Sound.fromFile(file));
 			}
@@ -167,7 +167,7 @@ class Paths
 	{
 		#if MODS_ALLOWED
 		var file:String = modsMusic(key);
-		if(FileSystem.exists(file)) {
+		if(Assets.exists(file)) {
 			if(!customSoundsLoaded.exists(file)) {
 				customSoundsLoaded.set(file, Sound.fromFile(file));
 			}
@@ -202,7 +202,7 @@ class Paths
 	#if MODS_ALLOWED
 	inline static private function returnSongFile(file:String):Sound
 	{
-		if(FileSystem.exists(file)) {
+		if(Assets.exists(file)) {
 			if(!customSoundsLoaded.exists(file)) {
 				customSoundsLoaded.set(file, Sound.fromFile(file));
 			}
@@ -233,13 +233,12 @@ class Paths
 	
 	static public function getTextFromFile(key:String, ?ignoreMods:Bool = false):String
 	{
-		#if sys
-		#if MODS_ALLOWED
+		#if desktop
 		if (!ignoreMods && FileSystem.exists(mods(key)))
 			return File.getContent(mods(key));
 		#end
 
-		if (FileSystem.exists(getPreloadPath(key)))
+		if (Assets.exists(getPreloadPath(key)))
 			return File.getContent(getPreloadPath(key));
 
 		if (currentLevel != null)
@@ -247,12 +246,12 @@ class Paths
 			var levelPath:String = '';
 			if(currentLevel != 'shared') {
 				levelPath = getLibraryPathForce(key, currentLevel);
-				if (FileSystem.exists(levelPath))
+				if (Assets.exists(levelPath))
 					return File.getContent(levelPath);
 			}
 
 			levelPath = getLibraryPathForce(key, 'shared');
-			if (FileSystem.exists(levelPath))
+			if (Assets.exists(levelPath))
 				return File.getContent(levelPath);
 		}
 		#end
@@ -263,7 +262,7 @@ class Paths
 	{
 		#if MODS_ALLOWED
 		var file:String = modsFont(key);
-		if(FileSystem.exists(file)) {
+		if(Asses.exists(file)) {
 			return file;
 		}
 		#end
@@ -273,7 +272,7 @@ class Paths
 	inline static public function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?library:String)
 	{
 		#if MODS_ALLOWED
-		if(FileSystem.exists(mods(currentModDirectory + '/' + key)) || FileSystem.exists(mods(key))) {
+		if(Assets.exists(mods(currentModDirectory + '/' + key)) || FileSystem.exists(mods(key))) {
 			return true;
 		}
 		#end
@@ -289,7 +288,7 @@ class Paths
 		#if MODS_ALLOWED
 		var imageLoaded:FlxGraphic = addCustomGraphic(key);
 		var xmlExists:Bool = false;
-		if(FileSystem.exists(modsXml(key))) {
+		if(Assets.exists(modsXml(key))) {
 			xmlExists = true;
 		}
 
@@ -304,7 +303,7 @@ class Paths
 		#if MODS_ALLOWED
 		var imageLoaded:FlxGraphic = addCustomGraphic(key);
 		var txtExists:Bool = false;
-		if(FileSystem.exists(modsTxt(key))) {
+		if(Assets.exists(modsTxt(key))) {
 			txtExists = true;
 		}
 
