@@ -24,9 +24,7 @@ import openfl.display.BlendMode;
 import openfl.utils.Assets;
 import flixel.math.FlxMath;
 import flixel.addons.transition.FlxTransitionableState;
-import openfl.utils.Assets as OpenFlAssets;
-
-#if MODS_ALLOWED
+#if sys
 import sys.FileSystem;
 import sys.io.File;
 #end
@@ -41,8 +39,8 @@ import Discord;
 using StringTools;
 
 class FunkinLua {
-	public static var Function_Stop = "Function_Stop";
-	public static var Function_Continue = "Function_Continue";
+	public static var Function_Stop = 1;
+	public static var Function_Continue = 0;
 
 	#if LUA_ALLOWED
 	public var lua:State = null;
@@ -79,8 +77,8 @@ class FunkinLua {
 		#end
 
 		// Lua shit
-		set('Function_Stop', "Function_Stop");
-		set('Function_Continue', "Function_Continue");
+		set('Function_Stop', Function_Stop);
+		set('Function_Continue', Function_Continue);
 		set('luaDebugMode', false);
 		set('luaDeprecatedWarnings', true);
 		set('inChartEditor', false);
@@ -169,8 +167,6 @@ class FunkinLua {
 		set('noResetButton', ClientPrefs.noReset);
 		set('lowQuality', ClientPrefs.lowQuality);
 
-		#if MODS_ALLOWED
-
 		Lua_helper.add_callback(lua, "addLuaScript", function(luaFile:String, ?ignoreAlreadyRunning:Bool = false) { //would be dope asf. 
 			var cervix = luaFile + ".lua";
 			var doPush = false;
@@ -178,7 +174,7 @@ class FunkinLua {
 				cervix = Paths.modFolders(cervix);
 				doPush = true;
 			} else {
-				cervix = SUtil.getPath() + Paths.getPreloadPath(cervix);
+				cervix = Paths.getPreloadPath(cervix);
 				if(FileSystem.exists(cervix)) {
 					doPush = true;
 				}
@@ -202,7 +198,7 @@ class FunkinLua {
 			}
 			luaTrace("Script doesn't exist!");
 		});
-		#end
+
 		//stuff 4 noobz like you B)
 		
 		
@@ -768,7 +764,6 @@ class FunkinLua {
 		Lua_helper.add_callback(lua, "cameraShake", function(camera:String, intensity:Float, duration:Float) {
 			cameraFromString(camera).shake(intensity, duration);
 		});
-		
 		Lua_helper.add_callback(lua, "cameraFlash", function(camera:String, color:String, duration:Float,forced:Bool) {
 			var colorNum:Int = Std.parseInt(color);
 			if(!color.startsWith('0x')) colorNum = Std.parseInt('0xff' + color);
@@ -1139,12 +1134,14 @@ class FunkinLua {
 		Lua_helper.add_callback(lua, "getRandomBool", function(chance:Float = 50) {
 			return FlxG.random.bool(chance);
 		});
-
 		Lua_helper.add_callback(lua, "startDialogue", function(dialogueFile:String, music:String = null) {
-			var path:String = Paths.json(Paths.formatToSongPath(PlayState.SONG.song) + '/' + dialogueFile);
+			var path:String = Paths.modsJson(Paths.formatToSongPath(PlayState.SONG.song) + '/' + dialogueFile);
+			if(!FileSystem.exists(path)) {
+				path = Paths.json(Paths.formatToSongPath(PlayState.SONG.song) + '/' + dialogueFile);
+			}
 			luaTrace('Trying to load dialogue: ' + path);
 
-			if(OpenFlAssets.exists(path)) {
+			if(FileSystem.exists(path)) {
 				var shit:DialogueFile = DialogueBoxPsych.parseDialogue(path);
 				if(shit.dialogue.length > 0) {
 					PlayState.instance.startDialogue(shit, music);
@@ -1163,11 +1160,11 @@ class FunkinLua {
 		});
 		Lua_helper.add_callback(lua, "startVideo", function(videoFile:String) {
 			#if VIDEOS_ALLOWED
-//			if(FileSystem.exists(Paths.video(videoFile))) {
+			if(FileSystem.exists(Paths.video(videoFile))) {
 				PlayState.instance.startVideo(videoFile);
-//			} else {
-//				luaTrace('Video file not found: ' + videoFile);
-//			}
+			} else {
+				luaTrace('Video file not found: ' + videoFile);
+			}
 			#else
 			if(PlayState.instance.endingSong) {
 				PlayState.instance.endSong();
@@ -1548,9 +1545,7 @@ class FunkinLua {
 			luaTrace('musicFadeOut is deprecated! Use soundFadeOut instead.', false, true);
 		});
 
-        #if desktop
 		Discord.DiscordClient.addLuaCallbacks(lua);
-		#end
 
 		call('onCreate', []);
 		#end

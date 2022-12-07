@@ -20,8 +20,7 @@ using StringTools;
 class Paths
 {
 	inline public static var SOUND_EXT = #if web "mp3" #else "ogg" #end;
-	
-	inline public static var VIDEO_EXT = "";
+	inline public static var VIDEO_EXT = "mp4";
 
 	#if MODS_ALLOWED
 	#if (haxe >= "4.0.0")
@@ -131,11 +130,6 @@ class Paths
 
 	inline static public function lua(key:String, ?library:String)
 	{
-		return Main.path + getPath('$key.lua', TEXT, library);
-	}
-
-	inline static public function luaAsset(key:String, ?library:String)
-	{
 		return getPath('$key.lua', TEXT, library);
 	}
 
@@ -147,7 +141,7 @@ class Paths
 			return file;
 		}
 		#end
-		return 'assets/videos/$key';
+		return 'assets/videos/$key.$VIDEO_EXT';
 	}
 
 	static public function sound(key:String, ?library:String):Dynamic
@@ -239,27 +233,27 @@ class Paths
 	
 	static public function getTextFromFile(key:String, ?ignoreMods:Bool = false):String
 	{
-//		#if sys
+		#if sys
 		#if MODS_ALLOWED
 		if (!ignoreMods && FileSystem.exists(mods(key)))
 			return File.getContent(mods(key));
-//		#end
+		#end
 
-		if (FileSystem.exists(SUtil.getPath() + getPreloadPath(key)))
-			return File.getContent(SUtil.getPath() + getPreloadPath(key));
+		if (FileSystem.exists(getPreloadPath(key)))
+			return File.getContent(getPreloadPath(key));
 
 		if (currentLevel != null)
 		{
 			var levelPath:String = '';
 			if(currentLevel != 'shared') {
 				levelPath = getLibraryPathForce(key, currentLevel);
-				if (FileSystem.exists(SUtil.getPath() + levelPath))
-					return File.getContent(SUtil.getPath() + levelPath);
+				if (FileSystem.exists(levelPath))
+					return File.getContent(levelPath);
 			}
 
 			levelPath = getLibraryPathForce(key, 'shared');
-			if (FileSystem.exists(SUtil.getPath() + levelPath))
-				return File.getContent(SUtil.getPath() + levelPath);
+			if (FileSystem.exists(levelPath))
+				return File.getContent(levelPath);
 		}
 		#end
 		return Assets.getText(getPath(key, TEXT));
@@ -273,11 +267,17 @@ class Paths
 			return file;
 		}
 		#end
-		return SUtil.getPath() + 'assets/fonts/$key';
+		return 'assets/fonts/$key';
 	}
 
 	inline static public function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?library:String)
-	{		
+	{
+		#if MODS_ALLOWED
+		if(FileSystem.exists(mods(currentModDirectory + '/' + key)) || FileSystem.exists(mods(key))) {
+			return true;
+		}
+		#end
+		
 		if(OpenFlAssets.exists(Paths.getPath(key, type))) {
 			return true;
 		}
@@ -334,7 +334,7 @@ class Paths
 	}
 
 	inline static public function mods(key:String = '') {
-		return SUtil.getPath() + 'mods/' + key;
+		return 'mods/' + key;
 	}
 	
 	inline static public function modsFont(key:String) {
@@ -380,7 +380,7 @@ class Paths
 				return fileToCheck;
 			}
 		}
-		return SUtil.getPath() + 'mods/' + key;
+		return 'mods/' + key;
 	}
 
 	static public function getModDirectories():Array<String> {

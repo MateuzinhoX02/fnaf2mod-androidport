@@ -61,6 +61,7 @@ class TitleState extends MusicBeatState
 	var credTextShit:Alphabet;
 	var textGroup:FlxGroup;
 	var ngSpr:FlxSprite;
+	
 
 	var curWacky:Array<String> = [];
 
@@ -78,15 +79,11 @@ class TitleState extends MusicBeatState
 
 	override public function create():Void
 	{
-                #if android
-		FlxG.android.preventDefaultKeys = [BACK];
-		#end
-
 		#if MODS_ALLOWED
 		// Just to load a mod on start up if ya got one. For mods that change the menu music and bg
-		if (FileSystem.exists(SUtil.getPath() + "modsList.txt")){
+		if (FileSystem.exists("modsList.txt")){
 			
-			var list:Array<String> = CoolUtil.listFromString(File.getContent(SUtil.getPath() + "modsList.txt"));
+			var list:Array<String> = CoolUtil.listFromString(File.getContent("modsList.txt"));
 			var foundTheTop = false;
 			for (i in list){
 				var dat = i.split("|");
@@ -99,15 +96,15 @@ class TitleState extends MusicBeatState
 		}
 		#end
 		
-		#if MODS_ALLOWED
-		var path = SUtil.getPath() + "mods/" + Paths.currentModDirectory + "/images/gfDanceTitle.json";
+		#if (desktop && MODS_ALLOWED)
+		var path = "mods/" + Paths.currentModDirectory + "/images/gfDanceTitle.json";
 		//trace(path, FileSystem.exists(path));
 		if (!FileSystem.exists(path)) {
-			path = SUtil.getPath() + "mods/images/gfDanceTitle.json";
+			path = "mods/images/gfDanceTitle.json";
 		}
 		//trace(path, FileSystem.exists(path));
 		if (!FileSystem.exists(path)) {
-			path = SUtil.getPath() + "assets/images/gfDanceTitle.json";
+			path = "assets/images/gfDanceTitle.json";
 		}
 		//trace(path, FileSystem.exists(path));
 		titleJSON = Json.parse(File.getContent(path));
@@ -205,7 +202,9 @@ class TitleState extends MusicBeatState
 		#end
 	}
 
+	var bgshit:FlxSprite;
 	var logoBl:FlxSprite;
+	var effect:FlxSprite;
 	var gfDance:FlxSprite;
 	var danceLeft:Bool = false;
 	var titleText:FlxSprite;
@@ -243,7 +242,7 @@ class TitleState extends MusicBeatState
 			}
 		}
 
-		Conductor.changeBPM(titleJSON.bpm);
+		Conductor.changeBPM(160);
 		persistentUpdate = true;
 
 		var bg:FlxSprite = new FlxSprite();
@@ -263,18 +262,49 @@ class TitleState extends MusicBeatState
 		
 		add(bg);
 
-		logoBl = new FlxSprite(titleJSON.titlex, titleJSON.titley);
+		bgshit = new FlxSprite(titleJSON.titlex, titleJSON.titley);
 		
 		
-		#if MODS_ALLOWED
-		var path = SUtil.getPath() + "mods/" + Paths.currentModDirectory + "/images/logoBumpin.png";
+		#if (desktop && MODS_ALLOWED)
+		var path = "mods/" + Paths.currentModDirectory + "/images/bgshit.png";
 		//trace(path, FileSystem.exists(path));
 		if (!FileSystem.exists(path)){
-			path = SUtil.getPath() + "mods/images/logoBumpin.png";
+			path = "mods/images/bgshit.png";
 		}
 		//trace(path, FileSystem.exists(path));
 		if (!FileSystem.exists(path)){
-			path = SUtil.getPath() + "assets/images/logoBumpin.png";
+			path = "assets/images/bgshit.png";
+		}
+		//trace(path, FileSystem.exists(path));
+		bgshit.frames = FlxAtlasFrames.fromSparrow(BitmapData.fromFile(path),File.getContent(StringTools.replace(path,".png",".xml")));
+		#else
+		
+		bgshit.frames = Paths.getSparrowAtlas('bgshit');
+		#end
+		
+		bgshit.antialiasing = ClientPrefs.globalAntialiasing;
+		bgshit.animation.addByPrefix('idle', 'idle', 24, true);
+		bgshit.animation.play('idle');
+		bgshit.scale.set(0.7, 0.7);
+		bgshit.screenCenter(XY);
+		bgshit.updateHitbox();
+		add(bgshit);
+
+
+
+
+		logoBl = new FlxSprite(titleJSON.titlex, titleJSON.titley);
+		
+		
+		#if (desktop && MODS_ALLOWED)
+		var path = "mods/" + Paths.currentModDirectory + "/images/logoBumpin.png";
+		//trace(path, FileSystem.exists(path));
+		if (!FileSystem.exists(path)){
+			path = "mods/images/logoBumpin.png";
+		}
+		//trace(path, FileSystem.exists(path));
+		if (!FileSystem.exists(path)){
+			path = "assets/images/logoBumpin.png";
 		}
 		//trace(path, FileSystem.exists(path));
 		logoBl.frames = FlxAtlasFrames.fromSparrow(BitmapData.fromFile(path),File.getContent(StringTools.replace(path,".png",".xml")));
@@ -286,22 +316,28 @@ class TitleState extends MusicBeatState
 		logoBl.antialiasing = ClientPrefs.globalAntialiasing;
 		logoBl.animation.addByPrefix('bump', 'logo bumpin', 24, false);
 		logoBl.animation.play('bump');
+		logoBl.scale.set(0.7, 0.7);
 		logoBl.updateHitbox();
-		// logoBl.screenCenter();
-		// logoBl.color = FlxColor.BLACK;
+		logoBl.x = 370;
+		logoBl.y = 0;
+		FlxTween.tween(logoBl, {y: logoBl.y + 50}, 0.6, {ease: FlxEase.quadInOut, type: PINGPONG});
+	    FlxTween.tween(logoBl, {y: logoBl.y + 50}, 0.6, {ease: FlxEase.quadInOut, type: PINGPONG, startDelay: 0.1});
+
+
+
 
 		swagShader = new ColorSwap();
 			gfDance = new FlxSprite(titleJSON.gfx, titleJSON.gfy);
 		
-		#if MODS_ALLOWED
-		var path = SUtil.getPath() + "mods/" + Paths.currentModDirectory + "/images/gfDanceTitle.png";
+		#if (desktop && MODS_ALLOWED)
+		var path = "mods/" + Paths.currentModDirectory + "/images/gfDanceTitle.png";
 		//trace(path, FileSystem.exists(path));
 		if (!FileSystem.exists(path)){
-			path = SUtil.getPath() + "mods/images/gfDanceTitle.png";
+			path = "mods/images/gfDanceTitle.png";
 		//trace(path, FileSystem.exists(path));
 		}
 		if (!FileSystem.exists(path)){
-			path = SUtil.getPath() + "assets/images/gfDanceTitle.png";
+			path = "assets/images/gfDanceTitle.png";
 		//trace(path, FileSystem.exists(path));
 		}
 		gfDance.frames = FlxAtlasFrames.fromSparrow(BitmapData.fromFile(path),File.getContent(StringTools.replace(path,".png",".xml")));
@@ -317,17 +353,23 @@ class TitleState extends MusicBeatState
 		gfDance.shader = swagShader.shader;
 		add(logoBl);
 		//logoBl.shader = swagShader.shader;
+		gfDance.scale.set(0.666666, 0.666666);
+		gfDance.updateHitbox();
+		gfDance.screenCenter(XY);
+		gfDance.x = 0;
+		gfDance.y = 200;
+		
 
 		titleText = new FlxSprite(titleJSON.startx, titleJSON.starty);
-		#if MODS_ALLOWED
-		var path = SUtil.getPath() + "mods/" + Paths.currentModDirectory + "/images/titleEnter.png";
+		#if (desktop && MODS_ALLOWED)
+		var path = "mods/" + Paths.currentModDirectory + "/images/titleEnter.png";
 		//trace(path, FileSystem.exists(path));
 		if (!FileSystem.exists(path)){
-			path = SUtil.getPath() + "mods/images/titleEnter.png";
+			path = "mods/images/titleEnter.png";
 		}
 		//trace(path, FileSystem.exists(path));
 		if (!FileSystem.exists(path)){
-			path = SUtil.getPath() + "assets/images/titleEnter.png";
+			path = "assets/images/titleEnter.png";
 		}
 		//trace(path, FileSystem.exists(path));
 		titleText.frames = FlxAtlasFrames.fromSparrow(BitmapData.fromFile(path),File.getContent(StringTools.replace(path,".png",".xml")));
@@ -578,65 +620,108 @@ class TitleState extends MusicBeatState
 			{
 				case 1:
 					#if PSYCH_WATERMARKS
-					createCoolText(['Psych Engine by'], 15);
-					#else
-					createCoolText(['ninjamuffin99', 'phantomArcade', 'kawaisprite', 'evilsk8er']);
+					createCoolText(['Its']);
 					#end
-				// credTextShit.visible = true;
+				case 2:
+					#if PSYCH_WATERMARKS
+					addMoreText('Finally');
+					#end
 				case 3:
 					#if PSYCH_WATERMARKS
-					addMoreText('Shadow Mario', 15);
-					addMoreText('RiverOaken', 15);
-					addMoreText('bb-panzu', 15);
-					#else
-					addMoreText('present');
+					addMoreText('Funking');
 					#end
-				// credTextShit.text += '\npresent...';
-				// credTextShit.addText();
-				case 4:
-					deleteCoolText();
-				// credTextShit.visible = false;
-				// credTextShit.text = 'In association \nwith';
-				// credTextShit.screenCenter();
-				case 5:
+					case 4:
 					#if PSYCH_WATERMARKS
-					createCoolText(['Not associated', 'with'], -40);
-					#else
-					createCoolText(['In association', 'with'], -40);
+					addMoreText('Here!');
+					#end
+				case 5:
+					deleteCoolText();
+					case 6:
+					#if PSYCH_WATERMARKS
+					createCoolText(['The']);
 					#end
 				case 7:
-					addMoreText('newgrounds', -40);
-					ngSpr.visible = true;
-				// credTextShit.text += '\nNewgrounds';
+					#if PSYCH_WATERMARKS
+					addMoreText('Funky');
+					#end
 				case 8:
+					#if PSYCH_WATERMARKS
+					addMoreText('Modders');
+					#end
+					case 9:
+					#if PSYCH_WATERMARKS
+					addMoreText('Presents');
+					#end
+					case 10:
 					deleteCoolText();
-					ngSpr.visible = false;
-				// credTextShit.visible = false;
-
-				// credTextShit.text = 'Shoutouts Tom Fulp';
-				// credTextShit.screenCenter();
-				case 9:
+					case 11:
+					#if PSYCH_WATERMARKS
+					createCoolText(['One']);
+					#end
+				case 12:
+					#if PSYCH_WATERMARKS
+					addMoreText('Of the');
+					#end
+					case 13:
+					#if PSYCH_WATERMARKS
+					addMoreText('Best mods');
+					#end
+					case 14:
+					#if PSYCH_WATERMARKS
+					addMoreText('Of all time');
+					#end
+					case 15:
+					deleteCoolText();
+					case 16:
+					#if PSYCH_WATERMARKS
+					createCoolText(['Made from']);
+					#end
+				case 17:
+					#if PSYCH_WATERMARKS
+					addMoreText('The Indie');
+					#end
+				case 18:
+					#if PSYCH_WATERMARKS
+					addMoreText('Horror game');
+					#end
+					case 19:
+					#if PSYCH_WATERMARKS
+					addMoreText('FNaF');
+					#end
+					case 20:
+					deleteCoolText();
+					case 21:
+					deleteCoolText();
+				case 22:
 					createCoolText([curWacky[0]]);
 				// credTextShit.visible = true;
-				case 11:
+				case 23:
 					addMoreText(curWacky[1]);
+
+				case 24:
+					addMoreText(curWacky[2]);
 				// credTextShit.text += '\nlmao';
-				case 12:
+				case 25:
 					deleteCoolText();
 				// credTextShit.visible = false;
 				// credTextShit.text = "Friday";
 				// credTextShit.screenCenter();
-				case 13:
-					addMoreText('Friday');
+				case 26:
+					addMoreText('FNF');
 				// credTextShit.visible = true;
-				case 14:
-					addMoreText('Night');
+				case 27:
+					addMoreText('Vs');
 				// credTextShit.text += '\nNight';
-				case 15:
-					addMoreText('Funkin'); // credTextShit.text += '\nFunkin';
-
-				case 16:
+				case 28:
+					addMoreText('FNaF'); // credTextShit.text += '\nFunkin';
+				case 29:
+						deleteCoolText();
+						addMoreText('FNF');
+						addMoreText('Vs');
+						addMoreText('FNaF 2');
+				case 30:
 					skipIntro();
+					FlxTween.tween(gfDance, {x : 0, y : 0 }, 2 , { ease: FlxEase.quadInOut });
 			}
 		}
 	}
@@ -647,6 +732,7 @@ class TitleState extends MusicBeatState
 	{
 		if (!skippedIntro)
 		{
+			FlxTween.tween(gfDance, {x : 0, y : 0 }, 2 , { ease: FlxEase.quadInOut });
 			remove(ngSpr);
 
 			FlxG.camera.flash(FlxColor.WHITE, 4);

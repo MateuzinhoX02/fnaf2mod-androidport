@@ -5,7 +5,7 @@ import haxe.Json;
 import haxe.format.JsonParser;
 import lime.utils.Assets;
 
-#if MODS_ALLOWED
+#if sys
 import sys.io.File;
 import sys.FileSystem;
 #end
@@ -49,38 +49,39 @@ class Song
 	public var player3:String = 'gf'; //deprecated
 	public var gfVersion:String = 'gf';
 
-	private static function onLoadJson(songJson:SwagSong) // Convert old charts to newest format
-	{
-		if(songJson.gfVersion == null)
-		{
-			songJson.gfVersion = songJson.player3;
-			songJson.player3 = null;
-		}
+	private static function onLoadJson(songJson1:SwagSong) // Convert old charts to newest format
+    {
+        var songJson:SwagSong = cast songJson1;
 
-		if(songJson.events == null)
-		{
-			songJson.events = [];
-			for (secNum in 0...songJson.notes.length)
-			{
-				var sec:SwagSection = songJson.notes[secNum];
+        if(songJson.gfVersion == null)
+        {
+            songJson.gfVersion = songJson.player3;
+            songJson.player3 = null;
+        }
 
-				var i:Int = 0;
-				var notes:Array<Dynamic> = sec.sectionNotes;
-				var len:Int = notes.length;
-				while(i < len)
-				{
-					var note:Array<Dynamic> = notes[i];
-					if(note[1] < 0)
-					{
-						songJson.events.push([note[0], [[note[2], note[3], note[4]]]]);
-						notes.remove(note);
-						len = notes.length;
-					}
-					else i++;
-				}
-			}
-		}
-	}
+        if(songJson.events == null)
+        {
+            songJson.events = [];
+            for (secNum in 0...songJson.notes.length)
+            {
+                var sec:Dynamic = songJson.notes[secNum];
+
+                var i:Int = 0;
+                var len:Int = sec.sectionNotes.length;
+                while(i < len)
+                {
+                    var note:Array<Dynamic> = sec.sectionNotes[i];
+                    if(note[1] < 0)
+                    {
+                        songJson.events.push([note[0], [[note[2], note[3], note[4]]]]);
+                        sec.sectionNotes.remove(note);
+                        len = sec.sectionNotes.length;
+                    }
+                    else i++;
+                }
+            }
+        }
+    }
 
 	public function new(song, notes, bpm)
 	{
@@ -103,8 +104,8 @@ class Song
 		#end
 
 		if(rawJson == null) {
-			#if MODS_ALLOWED
-			rawJson = File.getContent(SUtil.getPath() + Paths.json(formattedFolder + '/' + formattedSong)).trim();
+			#if sys
+			rawJson = File.getContent(Paths.json(formattedFolder + '/' + formattedSong)).trim();
 			#else
 			rawJson = Assets.getText(Paths.json(formattedFolder + '/' + formattedSong)).trim();
 			#end

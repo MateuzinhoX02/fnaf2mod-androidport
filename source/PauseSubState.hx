@@ -19,10 +19,11 @@ class PauseSubState extends MusicBeatSubstate
 	var grpMenuShit:FlxTypedGroup<Alphabet>;
 
 	var menuItems:Array<String> = [];
-	var menuItemsOG:Array<String> = ['Resume', 'Restart Song', 'Change Difficulty'#if android, 'Chart Editor'#end, 'Exit to menu'];
+	var menuItemsOG:Array<String> = ['Resume', 'Restart Song', 'Change Difficulty', 'Exit to menu'];
 	var difficultyChoices = [];
 	var curSelected:Int = 0;
 
+	var pausething:FlxSprite;
 	var pauseMusic:FlxSound;
 	var practiceText:FlxText;
 	//var botplayText:FlxText;
@@ -96,6 +97,14 @@ class PauseSubState extends MusicBeatSubstate
 		chartingText.visible = PlayState.chartingMode;
 		add(chartingText);
 
+		var pausething:FlxSprite = new FlxSprite().loadGraphic(Paths.image('pausething'));
+		pausething.scrollFactor.set(0, 0);
+		pausething.screenCenter();
+		pausething.updateHitbox();
+		pausething.scale.set(0.666666, 0.666666);
+		pausething.x = -1400;
+		add(pausething);
+
 		blueballedTxt.alpha = 0;
 		levelDifficulty.alpha = 0;
 		levelInfo.alpha = 0;
@@ -108,6 +117,7 @@ class PauseSubState extends MusicBeatSubstate
 		FlxTween.tween(levelInfo, {alpha: 1, y: 20}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.3});
 		FlxTween.tween(levelDifficulty, {alpha: 1, y: levelDifficulty.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.5});
 		FlxTween.tween(blueballedTxt, {alpha: 1, y: blueballedTxt.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.7});
+		FlxTween.tween(pausething, {x : -320 }, 0.6 , { ease: FlxEase.quadInOut });
 
 		grpMenuShit = new FlxTypedGroup<Alphabet>();
 		add(grpMenuShit);
@@ -123,11 +133,6 @@ class PauseSubState extends MusicBeatSubstate
 		changeSelection();
 
 		cameras = [FlxG.cameras.list[FlxG.cameras.list.length - 1]];
-
-                #if android
-		addVirtualPad(UP_DOWN, A);
-		addPadCamera();
-		#end
 	}
 
 	override function update(elapsed:Float)
@@ -152,8 +157,9 @@ class PauseSubState extends MusicBeatSubstate
 
 		if (accepted)
 		{
+
 			var daSelected:String = menuItems[curSelected];
-			if(daSelected != 'BACK' && difficultyChoices.contains(daSelected)) {
+			if(difficultyChoices.contains(daSelected)) {
 				var name:String = PlayState.SONG.song.toLowerCase();
 				var poop = Highscore.formatSong(name, curSelected);
 				PlayState.SONG = Song.loadFromJson(poop, name);
@@ -185,8 +191,6 @@ class PauseSubState extends MusicBeatSubstate
 					PlayState.instance.botplayTxt.visible = PlayState.instance.cpuControlled;
 					PlayState.instance.botplayTxt.alpha = 1;
 					PlayState.instance.botplaySine = 0;
-                                case 'Chart Editor':
-                                        MusicBeatState.switchState(new editors.ChartingState());
 				case "Exit to menu":
 					PlayState.deathCounter = 0;
 					PlayState.seenCutscene = false;

@@ -41,6 +41,8 @@ class CreditsState extends MusicBeatState
 		#end
 
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		bg.scale.set(0.7, 0.7);
+		bg.screenCenter(XY);
 		add(bg);
 
 		grpOptions = new FlxTypedGroup<Alphabet>();
@@ -79,30 +81,12 @@ class CreditsState extends MusicBeatState
 		#end
 
 		var pisspoop:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color
-			['NO FILES APK'],
-                        ['Edd34r',		'edd',		'coder extra/repo fix',					'https://youtube.com/c/Edd34rUWU',	'FFFF5E00'],
-                        ['Random',		'random',		'creador del Port en apk',					'https://youtube.com/channel/UC9ZKGvBODHIj0YL1xgtbLcA',	'FF8C6E63'],
-                        [''],
-                        ['Psych Engine Android'],
-			['M.A. Jigsaw',		    'majigsaw',		    'Main Coder of The Port',	 'https://www.youtube.com/channel/UC2Sk7vtPzOvbVzdVTWrribQ',	    'F73838'],
-			[''],
-                        ['Psych Engine Team'],
-			['Shadow Mario',		'shadowmario',		'Main Programmer of Psych Engine',						'https://twitter.com/Shadow_Mario_',	'444444'],
-			['RiverOaken',			'riveroaken',		'Main Artist/Animator of Psych Engine',					'https://twitter.com/river_oaken',		'C30085'],
-			['bb-panzu',			'bb-panzu',			'Additional Programmer of Psych Engine',				'https://twitter.com/bbsub3',			'389A58'],
-			[''],
-			['Engine Contributors'],
-			['shubs',				'shubs',			'New Input System Programmer',							'https://twitter.com/yoshubs',			'4494E6'],
-			['SqirraRNG',			'gedehari',			'Chart Editor\'s Sound Waveform base',					'https://twitter.com/gedehari',			'FF9300'],
-			['iFlicky',				'iflicky',			'Delay/Combo Menu Song Composer\nand Dialogue Sounds',	'https://twitter.com/flicky_i',			'C549DB'],
-			['PolybiusProxy',		'polybiusproxy',	'.MP4 Video Loader Extension',							'https://twitter.com/polybiusproxy',	'FFEAA6'],
-			['Keoiki',				'keoiki',			'Note Splash Animations',								'https://twitter.com/Keoiki_',			'FFFFFF'],
-			[''],
-			["Funkin' Crew"],
-			['ninjamuffin99',		'ninjamuffin99',	"Programmer of Friday Night Funkin'",					'https://twitter.com/ninja_muffin99',	'F73838'],
-			['PhantomArcade',		'phantomarcade',	"Animator of Friday Night Funkin'",						'https://twitter.com/PhantomArcade3K',	'FFBB1B'],
-			['evilsk8r',			'evilsk8r',			"Artist of Friday Night Funkin'",						'https://twitter.com/evilsk8r',			'53E52C'],
-			['kawaisprite',			'kawaisprite',		"Composer of Friday Night Funkin'",						'https://twitter.com/kawaisprite',		'6475F3']
+			["Vs FNaF 2"],
+			['POURIA SFMS',		'pouria',	"Animator, Coder",					'https://www.youtube.com/channel/UCRzbNDQHsRI6xPj-YFHAlEw',	'ffffff'],
+			['PENOVE',		'penove',	"Music Composer",						'https://www.youtube.com/channel/UCMo5DEAD4-33lhM2ZQm_SlQ',	'ffffff'],
+			['C00T DOGGO',			'coot',		"Charter",						'https://twitter.com/kawaisprite',		'ffffff'],
+			['THUNDER92YT',		'thunder',	"Music Composer",						'https://www.youtube.com/channel/UCMo5DEAD4-33lhM2ZQm_SlQ',	'ffffff'],
+			['BEPH',			'beph',			"Icon artist",						' ',			'ffffff']
 		];
 		
 		for(i in pisspoop){
@@ -152,11 +136,6 @@ class CreditsState extends MusicBeatState
 		bg.color = getCurrentBGColor();
 		intendedColor = bg.color;
 		changeSelection();
-
-                #if android
-		addVirtualPad(UP_DOWN, A_B);
-		#end
-
 		super.create();
 	}
 

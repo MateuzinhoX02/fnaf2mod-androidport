@@ -51,12 +51,10 @@ import Achievements;
 import StageData;
 import FunkinLua;
 import DialogueBoxPsych;
-import lime.app.Application;
-import openfl.Assets;
 
-				
+#if sys
 import sys.FileSystem;
-import sys.io.File;
+#end
 
 using StringTools;
 
@@ -703,47 +701,52 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		FileSystem.createDirectory(Main.path + "assets"); // saving lines
 
-		// "GLOBAL" SCRIPT
+		// "GLOBAL" SCRIPTS
 		#if LUA_ALLOWED
-		var doPush:Bool = false;
+		var filesPushed:Array<String> = [];
+		var foldersToCheck:Array<String> = [Paths.getPreloadPath('scripts/')];
 
-		if(openfl.utils.Assets.exists("assets/scripts/" + "script.lua"))
-		{
-			var path = Paths.luaAsset("scripts/" + "script");
-			var luaFile = openfl.Assets.getBytes(path);
-
-			FileSystem.createDirectory(Main.path + "assets/scripts");
-			FileSystem.createDirectory(Main.path + "assets/scripts/");
-			
-			File.saveBytes(Paths.lua("scripts/" + "script"), luaFile);
-			doPush = true;
-		}
-		if(doPush)
-			luaArray.push(new FunkinLua(Paths.lua("scripts/" + "script")));
+		#if MODS_ALLOWED
+		foldersToCheck.insert(0, Paths.mods('scripts/'));
+		if(Paths.currentModDirectory != null && Paths.currentModDirectory.length > 0)
+			foldersToCheck.insert(0, Paths.mods(Paths.currentModDirectory + '/scripts/'));
 		#end
 
-		// STAGE SCRIPTS
-		#if LUA_ALLOWED
-		var doPush:Bool = false;
-
-		if(openfl.utils.Assets.exists("assets/stages/" + curStage + ".lua"))
+		for (folder in foldersToCheck)
 		{
-			var path = Paths.luaAsset("stages/" + curStage);
-			var luaFile = openfl.Assets.getBytes(path);
-
-			FileSystem.createDirectory(Main.path + "assets/stages");
-			FileSystem.createDirectory(Main.path + "assets/stages/");
-
-			File.saveBytes(Paths.lua("stages/" + curStage), luaFile);
-
-			doPush = true;
+			if(FileSystem.exists(folder))
+			{
+				for (file in FileSystem.readDirectory(folder))
+				{
+					if(file.endsWith('.lua') && !filesPushed.contains(file))
+					{
+						luaArray.push(new FunkinLua(folder + file));
+						filesPushed.push(file);
+					}
+				}
+			}
 		}
-		if(doPush)
-			luaArray.push(new FunkinLua(Paths.lua("stages/" + curStage)));
+		#end
+		
 
-                #end
+		// STAGE SCRIPTS
+		#if (MODS_ALLOWED && LUA_ALLOWED)
+		var doPush:Bool = false;
+		var luaFile:String = 'stages/' + curStage + '.lua';
+		if(FileSystem.exists(Paths.modFolders(luaFile))) {
+			luaFile = Paths.modFolders(luaFile);
+			doPush = true;
+		} else {
+			luaFile = Paths.getPreloadPath(luaFile);
+			if(FileSystem.exists(luaFile)) {
+				doPush = true;
+			}
+		}
+
+		if(doPush) 
+			luaArray.push(new FunkinLua(luaFile));
+		#end
 
 		if(!modchartSprites.exists('blammedLightsBlack')) { //Creates blammed light black fade in case you didn't make your own
 			blammedLightsBlack = new ModchartSprite(FlxG.width * -0.5, FlxG.height * -0.5);
@@ -820,7 +823,7 @@ class PlayState extends MusicBeatState
 			dialogueJson = DialogueBoxPsych.parseDialogue(file);
 		}
 
-		var file:String = SUtil.getPath() + Paths.txt(songName + '/' + songName + 'Dialogue'); //Checks for vanilla/Senpai dialogue
+		var file:String = Paths.txt(songName + '/' + songName + 'Dialogue'); //Checks for vanilla/Senpai dialogue
 		if (OpenFlAssets.exists(file)) {
 			dialogue = CoolUtil.coolTextFile(file);
 		}
@@ -867,7 +870,7 @@ class PlayState extends MusicBeatState
 		timeBar = new FlxBar(timeBarBG.x + 4, timeBarBG.y + 4, LEFT_TO_RIGHT, Std.int(timeBarBG.width - 8), Std.int(timeBarBG.height - 8), this,
 			'songPercent', 0, 1);
 		timeBar.scrollFactor.set();
-		timeBar.createFilledBar(0xFF000000, 0xFFFFFFFF);
+		timeBar.createFilledBar(0xFF3c1a5f, 0xFF4fb2ff);
 		timeBar.numDivisions = 800; //How much lag this causes?? Should i tone it down to idk, 400 or 200?
 		timeBar.alpha = 0;
 		timeBar.visible = showTime;
@@ -895,7 +898,7 @@ class PlayState extends MusicBeatState
 		// startCountdown();
 
 		generateSong(SONG.song);
-		#if (LUA_ALLOWED && MODS_ALLOWED)
+		#if LUA_ALLOWED
 		for (notetype in noteTypeMap.keys())
 		{
 			var luaToLoad:String = Paths.modFolders('custom_notetypes/' + notetype + '.lua');
@@ -905,7 +908,7 @@ class PlayState extends MusicBeatState
 			}
 			else
 			{
-				luaToLoad = SUtil.getPath() + Paths.getPreloadPath('custom_notetypes/' + notetype + '.lua');
+				luaToLoad = Paths.getPreloadPath('custom_notetypes/' + notetype + '.lua');
 				if(FileSystem.exists(luaToLoad))
 				{
 					luaArray.push(new FunkinLua(luaToLoad));
@@ -921,28 +924,13 @@ class PlayState extends MusicBeatState
 			}
 			else
 			{
-				luaToLoad = SUtil.getPath() + Paths.getPreloadPath('custom_events/' + event + '.lua');
+				luaToLoad = Paths.getPreloadPath('custom_events/' + event + '.lua');
 				if(FileSystem.exists(luaToLoad))
 				{
 					luaArray.push(new FunkinLua(luaToLoad));
 				}
 			}
 		}
-		#else
-		for (notetype in noteTypeMap.keys()) {
-                        var luaToLoad:String = 'custom_notetypes/' + notetype + '.lua';
-                    luaToLoad = Paths.getPreloadPath(luaToLoad);
-                        if(OpenFlAssets.exists(luaToLoad)) {
-                                luaArray.push(new FunkinLua(Asset2File.getPath(luaToLoad)));
-                        }
-                }
-                for (event in eventPushedMap.keys()) {
-                        var luaToLoad:String = 'custom_events/' + event + '.lua';
-                        luaToLoad = Paths.getPreloadPath(luaToLoad);    
-			if(OpenFlAssets.exists(luaToLoad)) {
-                                luaArray.push(new FunkinLua(Asset2File.getPath(luaToLoad)));
-                        }
-                }
 		#end
 		noteTypeMap.clear();
 		noteTypeMap = null;
@@ -1017,7 +1005,7 @@ class PlayState extends MusicBeatState
 		scoreTxt.visible = !ClientPrefs.hideHud;
 		add(scoreTxt);
 
-		botplayTxt = new FlxText(400, timeBarBG.y + 55, FlxG.width - 800, "BOTPLAY", 32);
+		botplayTxt = new FlxText(400, timeBarBG.y + 55, FlxG.width - 800, "CHEATER", 32);
 		botplayTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		botplayTxt.scrollFactor.set();
 		botplayTxt.borderSize = 1.25;
@@ -1041,10 +1029,6 @@ class PlayState extends MusicBeatState
 		timeTxt.cameras = [camHUD];
 		doof.cameras = [camHUD];
 
-                #if android
-		addAndroidControls();
-	        #end
-
 		// if (SONG.song == 'South')
 		// FlxG.camera.alpha = 0.7;
 		// UI_camera.zoom = 1;
@@ -1055,25 +1039,29 @@ class PlayState extends MusicBeatState
 
 		// SONG SPECIFIC SCRIPTS
 		#if LUA_ALLOWED
-		var doPush:Bool = false;
+		var filesPushed:Array<String> = [];
+		var foldersToCheck:Array<String> = [Paths.getPreloadPath('data/' + Paths.formatToSongPath(SONG.song) + '/')];
 
-		if(openfl.utils.Assets.exists("assets/data/" + Paths.formatToSongPath(SONG.song) + "/" + "script.lua"))
+		#if MODS_ALLOWED
+		foldersToCheck.insert(0, Paths.mods('data/' + Paths.formatToSongPath(SONG.song) + '/'));
+		if(Paths.currentModDirectory != null && Paths.currentModDirectory.length > 0)
+			foldersToCheck.insert(0, Paths.mods(Paths.currentModDirectory + '/data/' + Paths.formatToSongPath(SONG.song) + '/'));
+		#end
+
+		for (folder in foldersToCheck)
 		{
-			var path = Paths.luaAsset("data/" + Paths.formatToSongPath(SONG.song) + "/" + "script");
-			var luaFile = openfl.Assets.getBytes(path);
-
-			FileSystem.createDirectory(Main.path + "assets/data");
-			FileSystem.createDirectory(Main.path + "assets/data/");
-			FileSystem.createDirectory(Main.path + "assets/data/" + Paths.formatToSongPath(SONG.song));
-																				  
-
-			File.saveBytes(Paths.lua("data/" + Paths.formatToSongPath(SONG.song) + "/" + "script"), luaFile);
-
-			doPush = true;
+			if(FileSystem.exists(folder))
+			{
+				for (file in FileSystem.readDirectory(folder))
+				{
+					if(file.endsWith('.lua') && !filesPushed.contains(file))
+					{
+						luaArray.push(new FunkinLua(folder + file));
+						filesPushed.push(file);
+					}
+				}
+			}
 		}
-		if(doPush) 
-			luaArray.push(new FunkinLua(Paths.lua("data/" + Paths.formatToSongPath(SONG.song) + "/" + "script")));
-
 		#end
 		
 		var daSong:String = Paths.formatToSongPath(curSong);
@@ -1137,9 +1125,6 @@ class PlayState extends MusicBeatState
 				case 'senpai' | 'roses' | 'thorns':
 					if(daSong == 'roses') FlxG.sound.play(Paths.sound('ANGRY'));
 					schoolIntro(doof);
-								
-				case 'bopeebo':
-					startVideo('testVideo');
 
 				default:
 					startCountdown();
@@ -1257,14 +1242,14 @@ class PlayState extends MusicBeatState
 
 	function startCharacterLua(name:String)
 	{
-		#if (LUA_ALLOWED && MODS_ALLOWED)
+		#if LUA_ALLOWED
 		var doPush:Bool = false;
 		var luaFile:String = 'characters/' + name + '.lua';
 		if(FileSystem.exists(Paths.modFolders(luaFile))) {
 			luaFile = Paths.modFolders(luaFile);
 			doPush = true;
 		} else {
-			luaFile = SUtil.getPath() + Paths.getPreloadPath(luaFile);
+			luaFile = Paths.getPreloadPath(luaFile);
 			if(FileSystem.exists(luaFile)) {
 				doPush = true;
 			}
@@ -1278,22 +1263,6 @@ class PlayState extends MusicBeatState
 			}
 			luaArray.push(new FunkinLua(luaFile));
 		}
-		#elseif LUA_ALLOWED
-		var doPush:Bool = false;
-
-		if(openfl.utils.Assets.exists("assets/characters/" + name + ".lua"))
-		{
-			var path = Paths.luaAsset("characters/" + name);
-			var luaFile = openfl.Assets.getBytes(path);
-
-			FileSystem.createDirectory(Main.path + "assets/characters");
-			FileSystem.createDirectory(Main.path + "assets/characters/");
-
-			File.saveBytes(Paths.lua("characters/" + name), luaFile);                    
-			doPush = true;
-		}
-		if(doPush)
-			luaArray.push(new FunkinLua(Paths.lua("characters/" + name)));
 		#end
 	}
 
@@ -1306,29 +1275,52 @@ class PlayState extends MusicBeatState
 		char.y += char.positionArray[1];
 	}
 
-	public function startVideo(name:String, ?isCutscene:Bool = true):Void {
-		var fileName:String = "assets/videos/" + name;
-    
-/*		var bg:FlxSprite;
-		bg = new FlxSprite(-FlxG.width, -FlxG.height).makeGraphic(FlxG.width * 3, FlxG.height * 3, FlxColor.BLACK);
-		bg.scrollFactor.set();
-		bg.cameras = [camHUD];
-*/		//add(bg);
-
-		(new FlxVideo(fileName)).finishCallback = function() {
-//			remove(bg);
-			startAndEnd();
+	public function startVideo(name:String):Void {
+		#if VIDEOS_ALLOWED
+		var foundFile:Bool = false;
+		var fileName:String = #if MODS_ALLOWED Paths.modFolders('videos/' + name + '.' + Paths.VIDEO_EXT); #else ''; #end
+		#if sys
+		if(FileSystem.exists(fileName)) {
+			foundFile = true;
 		}
-		if (isCutscene)
-		startAndEnd();
-	}
+		#end
 
-	function startAndEnd()
-	{
-		if(endingSong)
+		if(!foundFile) {
+			fileName = Paths.video(name);
+			#if sys
+			if(FileSystem.exists(fileName)) {
+			#else
+			if(OpenFlAssets.exists(fileName)) {
+			#end
+				foundFile = true;
+			}
+		}
+
+		if(foundFile) {
+			inCutscene = true;
+			var bg = new FlxSprite(-FlxG.width, -FlxG.height).makeGraphic(FlxG.width * 3, FlxG.height * 3, FlxColor.BLACK);
+			bg.scrollFactor.set();
+			bg.cameras = [camHUD];
+			add(bg);
+
+			(new FlxVideo(fileName)).finishCallback = function() {
+				remove(bg);
+				if(endingSong) {
+					endSong();
+				} else {
+					startCountdown();
+				}
+			}
+			return;
+		} else {
+			FlxG.log.warn('Couldnt find video file: ' + fileName);
+		}
+		#end
+		if(endingSong) {
 			endSong();
-		else
+		} else {
 			startCountdown();
+		}
 	}
 
 	var dialogueCount:Int = 0;
@@ -1343,23 +1335,23 @@ class PlayState extends MusicBeatState
 			inCutscene = true;
 			CoolUtil.precacheSound('dialogue');
 			CoolUtil.precacheSound('dialogueClose');
-			psychDialogue = new DialogueBoxPsych(dialogueFile, song);
-			psychDialogue.scrollFactor.set();
+			var doof:DialogueBoxPsych = new DialogueBoxPsych(dialogueFile, song);
+			doof.scrollFactor.set();
 			if(endingSong) {
-				psychDialogue.finishThing = function() {
+				doof.finishThing = function() {
 					psychDialogue = null;
 					endSong();
 				}
 			} else {
-				psychDialogue.finishThing = function() {
+				doof.finishThing = function() {
 					psychDialogue = null;
 					startCountdown();
 				}
 			}
-			psychDialogue.nextDialogueThing = startNextDialogue;
-			psychDialogue.skipDialogueThing = skipDialogue;
-			psychDialogue.cameras = [camHUD];
-			add(psychDialogue);
+			doof.nextDialogueThing = startNextDialogue;
+			doof.skipDialogueThing = skipDialogue;
+			doof.cameras = [camHUD];
+			add(doof);
 		} else {
 			FlxG.log.warn('Your dialogue file is badly formatted!');
 			if(endingSong) {
@@ -1475,9 +1467,6 @@ class PlayState extends MusicBeatState
 		inCutscene = false;
 		var ret:Dynamic = callOnLuas('onStartCountdown', []);
 		if(ret != FunkinLua.Function_Stop) {
-                        #if android
-		        androidc.visible = true;
-		        #end
 			generateStaticArrows(0);
 			generateStaticArrows(1);
 			for (i in 0...playerStrums.length) {
@@ -1698,8 +1687,8 @@ class PlayState extends MusicBeatState
 		var daBeats:Int = 0; // Not exactly representative of 'daBeats' lol, just how much it has looped
 
 		var songName:String = Paths.formatToSongPath(SONG.song);
-		var file:String = SUtil.getPath() + Paths.json(songName + '/events');
-		#if MODS_ALLOWED
+		var file:String = Paths.json(songName + '/events');
+		#if sys
 		if (FileSystem.exists(Paths.modsJson(songName + '/events')) || FileSystem.exists(file)) {
 		#else
 		if (OpenFlAssets.exists(file)) {
@@ -2198,7 +2187,7 @@ class PlayState extends MusicBeatState
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		if (controls.PAUSE#if android || FlxG.android.justReleased.BACK #end && startedCountdown && canPause)
+		if (controls.PAUSE && startedCountdown && canPause)
 		{
 			var ret:Dynamic = callOnLuas('onPause', []);
 			if(ret != FunkinLua.Function_Stop) {
@@ -3092,9 +3081,6 @@ class PlayState extends MusicBeatState
 
 		deathCounter = 0;
 		seenCutscene = false;
-                #if android
-		androidc.visible = false;
-		#end
 
 		#if ACHIEVEMENTS_ALLOWED
 		if(achievementObj != null) {
