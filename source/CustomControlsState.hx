@@ -165,7 +165,7 @@ class CustomControlsState extends MusicBeatSubstate
 		var androidback:Bool = false;
 		#end
 		if (exitbutton.justReleased || androidback){
-			FlxG.switchState(new OptionsState());
+			FlxG.switchState(new options.OptionsState());
 		}
 
 		for (touch in FlxG.touches.list){
