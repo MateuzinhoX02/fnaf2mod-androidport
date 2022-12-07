@@ -197,11 +197,6 @@ class CharacterEditorState extends MusicBeatState
 		FlxG.mouse.visible = true;
 		reloadCharacterOptions();
 
-		#if android
-		addVirtualPad(FULL, A_B_C_X_Y_Z);
-		addPadCamera();
-		#end
-
 		super.create();
 	}
 
@@ -515,7 +510,6 @@ class CharacterEditorState extends MusicBeatState
 		tab_group.name = "Character";
 
 		imageInputText = new FlxUIInputText(15, 30, 200, 'characters/BOYFRIEND', 8);
-		imageInputText.focusGained = () -> FlxG.stage.window.textInputEnabled = true;	
 		var reloadImage:FlxButton = new FlxButton(imageInputText.x + 210, imageInputText.y - 3, "Reload Image", function()
 		{
 			char.imageFile = imageInputText.text;
@@ -537,7 +531,6 @@ class CharacterEditorState extends MusicBeatState
 			});
 
 		healthIconInputText = new FlxUIInputText(15, imageInputText.y + 35, 75, leHealthIcon.getCharacter(), 8);
-		healthIconInputText.focusGained = () -> FlxG.stage.window.textInputEnabled = true;	
 
 		singDurationStepper = new FlxUINumericStepper(15, healthIconInputText.y + 45, 0.1, 4, 0, 999, 1);
 
@@ -616,11 +609,8 @@ class CharacterEditorState extends MusicBeatState
 		tab_group.name = "Animations";
 		
 		animationInputText = new FlxUIInputText(15, 85, 80, '', 8);
-		animationInputText.focusGained = () -> FlxG.stage.window.textInputEnabled = true;		
 		animationNameInputText = new FlxUIInputText(animationInputText.x, animationInputText.y + 35, 150, '', 8);
-		animationNameInputText.focusGained = () -> FlxG.stage.window.textInputEnabled = true;		
 		animationIndicesInputText = new FlxUIInputText(animationNameInputText.x, animationNameInputText.y + 40, 250, '', 8);
-		animationIndicesInputText.focusGained = () -> FlxG.stage.window.textInputEnabled = true;
 		animationNameFramerate = new FlxUINumericStepper(animationInputText.x + 170, animationInputText.y, 1, 24, 0, 240, 0);
 		animationLoopCheckBox = new FlxUICheckBox(animationNameInputText.x + 170, animationNameInputText.y - 1, null, null, "Should it Loop?", 100);
 
@@ -1039,7 +1029,7 @@ class CharacterEditorState extends MusicBeatState
 
 		#if MODS_ALLOWED
 		characterList = [];
-		var directories:Array<String> = [Paths.mods('characters/'), Paths.mods(Paths.currentModDirectory + '/characters/'), SUtil.getPath() + Paths.getPreloadPath('characters/')];
+		var directories:Array<String> = [Paths.mods('characters/'), Paths.mods(Paths.currentModDirectory + '/characters/'), Paths.getPreloadPath('characters/')];
 		for (i in 0...directories.length) {
 			var directory:String = directories[i];
 			if(FileSystem.exists(directory)) {
@@ -1079,11 +1069,6 @@ class CharacterEditorState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		for (touch in FlxG.touches.list) {
-			if ((touch.overlaps(imageInputText) || touch.overlaps(healthIconInputText) || touch.overlaps(animationInputText) || touch.overlaps(animationNameInputText) || touch.overlaps(animationIndicesInputText)) && touch.justPressed) { //overlaps check shit for keyboard appearing on android 
-				FlxG.stage.window.textInputEnabled = true;
-			}
-		}//thanks sirox
 		if(char.animationsArray[curAnim] != null) {
 			textAnim.text = char.animationsArray[curAnim].anim;
 
@@ -1118,7 +1103,7 @@ class CharacterEditorState extends MusicBeatState
 		FlxG.sound.volumeUpKeys = TitleState.volumeUpKeys;
 
 		if(!charDropDown.dropPanel.visible) {
-			if (FlxG.keys.justPressed.ESCAPE #if android || _virtualpad.buttonB.justPressed #end) {
+			if (FlxG.keys.justPressed.ESCAPE) {
 				if(goToPlayState) {
 					MusicBeatState.switchState(new PlayState());
 				} else {
@@ -1129,20 +1114,20 @@ class CharacterEditorState extends MusicBeatState
 				return;
 			}
 			
-			if (FlxG.keys.justPressed.R #if android || _virtualpad.buttonZ.justPressed #end) {
+			if (FlxG.keys.justPressed.R) {
 				FlxG.camera.zoom = 1;
 			}
 
-			if ((FlxG.keys.pressed.E #if android || _virtualpad.buttonX.justPressed #end) && FlxG.camera.zoom < 3) {
+			if (FlxG.keys.pressed.E && FlxG.camera.zoom < 3) {
 				FlxG.camera.zoom += elapsed * FlxG.camera.zoom;
 				if(FlxG.camera.zoom > 3) FlxG.camera.zoom = 3;
 			}
-			if ((FlxG.keys.pressed.Q #if android || _virtualpad.buttonY.justPressed #end) && FlxG.camera.zoom > 0.1) {
+			if (FlxG.keys.pressed.Q && FlxG.camera.zoom > 0.1) {
 				FlxG.camera.zoom -= elapsed * FlxG.camera.zoom;
 				if(FlxG.camera.zoom < 0.1) FlxG.camera.zoom = 0.1;
 			}
 
-			if (FlxG.keys.pressed.I || FlxG.keys.pressed.J || FlxG.keys.pressed.K || FlxG.keys.pressed.L #if android || _virtualpad.buttonUp.justPressed || _virtualpad.buttonDown.justPressed || _virtualpad.buttonLeft.justPressed || _virtualpad.buttonRight.justPressed && _virtualpad.buttonC.justPressed #end)
+			if (FlxG.keys.pressed.I || FlxG.keys.pressed.J || FlxG.keys.pressed.K || FlxG.keys.pressed.L)
 			{
 				var addToCam:Float = 500 * elapsed;
 				if (FlxG.keys.pressed.SHIFT)
@@ -1160,7 +1145,7 @@ class CharacterEditorState extends MusicBeatState
 			}
 
 			if(char.animationsArray.length > 0) {
-				if (FlxG.keys.justPressed.W #if android || _virtualpad.buttonA.justPressed #end)
+				if (FlxG.keys.justPressed.W)
 				{
 					curAnim -= 1;
 				}
@@ -1182,7 +1167,7 @@ class CharacterEditorState extends MusicBeatState
 					genBoyOffsets();
 				}
 
-				if (FlxG.keys.justPressed.R #if android || _virtualpad.buttonZ.justPressed #end)
+				if (FlxG.keys.justPressed.R)
 				{
 					char.animationsArray[curAnim].offsets = [0, 0];
 					
@@ -1191,12 +1176,9 @@ class CharacterEditorState extends MusicBeatState
 					genBoyOffsets();
 				}
 
-				var controlArray:Array<Bool> = [
-					FlxG.keys.justPressed.LEFT #if android || _virtualpad.buttonLeft.justPressed #end,
-					FlxG.keys.justPressed.RIGHT #if android || _virtualpad.buttonRight.justPressed #end,
-					FlxG.keys.justPressed.UP #if android || _virtualpad.buttonUp.justPressed #end,
-					FlxG.keys.justPressed.DOWN #if android || _virtualpad.buttonDown.justPressed #end
-				];			
+				var controlArray:Array<Bool> = [FlxG.keys.justPressed.LEFT, FlxG.keys.justPressed.RIGHT, FlxG.keys.justPressed.UP, FlxG.keys.justPressed.DOWN];
+				
+				
 				
 				for (i in 0...controlArray.length) {
 					if(controlArray[i]) {
@@ -1298,15 +1280,11 @@ class CharacterEditorState extends MusicBeatState
 
 		if (data.length > 0)
 		{
-			#if android
-                        SUtil.saveContent(daAnim, ".json", data);
-                        #else
 			_file = new FileReference();
 			_file.addEventListener(Event.COMPLETE, onSaveComplete);
 			_file.addEventListener(Event.CANCEL, onSaveCancel);
 			_file.addEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 			_file.save(data, daAnim + ".json");
-                        #end
 		}
 	}
 
